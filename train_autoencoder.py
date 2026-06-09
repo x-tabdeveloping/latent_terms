@@ -53,7 +53,7 @@ def main(encoder_name: str):
             )
             flat_token_embeddings, lengths = flatten_repr(token_embeddings)
             autoencoder.partial_fit(flat_token_embeddings, n_epochs=1)
-            if i_batch % (N_BATCHES // 10):
+            if (i_batch % (N_BATCHES // 10)) == 0:
                 print("Saving checkpoint...")
                 joblib.dump(
                     autoencoder,
