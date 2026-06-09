@@ -1,9 +1,11 @@
 import random
 from functools import partial
+from pathlib import Path
 from typing import Optional
 
 import jax
 import jax.numpy as jnp
+import joblib
 import numpy as np
 import optax
 import scipy.sparse as spr
@@ -94,7 +96,7 @@ def train_autoencoder(
             updates, opt_state = optimizer.update(grads, opt_state, params)
             params = optax.apply_updates(params, updates)
             epoch_loss += loss_value
-        loss_history.append(epoch_loss)
+        loss_history.append(float(epoch_loss))
         print(f"Epoch {i_epoch}: loss={epoch_loss:.2e}")
     return params, loss_history
 
@@ -165,6 +167,33 @@ class TopKAutoEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         return self.partial_fit(X, y)
+
+    def to_dict(self) -> dict:
+        return dict(
+            attr=self.get_params(), params=self._params, loss_curve=self.loss_curve_
+        )
+
+    @classmethod
+    def from_dict(cls, data):
+        obj = cls(**data["attr"])
+        params = data["params"]
+        obj.coef_ = np.array(params["W_e"])
+        obj.coef_d_ = np.array(params["W_d"])
+        obj.intercept_ = np.array(params["b_e"])
+        obj.intercept_d_ = np.array(params["b_d"])
+        obj.loss_curve_ = data["loss_curve"]
+        return obj
+
+    def to_disk(
+        self,
+        path,
+    ):
+        joblib.dump(self.to_dict(), path)
+
+    @classmethod
+    def from_disk(cls, path):
+        data = joblib.load(path)
+        return cls.from_dict(data)
 
     @property
     def _params(self):
