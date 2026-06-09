@@ -18,6 +18,7 @@ def parse_args():
 
 # Roughly corresponds to .5B tokens
 N_BATCHES = 500
+N_EPOCHS = 1
 
 
 def main(encoder_name: str):
@@ -34,7 +35,7 @@ def main(encoder_name: str):
         random_state=42,
         show_progress_bar=False,
     )
-    for i_epoch in range(3):
+    for i_epoch in range(N_EPOCHS):
         batches = load_dataset(
             "HuggingFaceFW/fineweb-edu",
             name="sample-10BT",
