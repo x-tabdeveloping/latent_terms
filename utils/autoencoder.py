@@ -67,15 +67,23 @@ def train_autoencoder(
     sparsity_weight: float,
     batch_size: int,
     n_epochs: int,
+    show_progress_bar=True,
 ):
     loss_history = []
-    for i_epoch in trange(n_epochs, desc="Going through all epochs."):
+    for i_epoch in trange(
+        n_epochs, desc="Going through all epochs.", disable=not show_progress_bar
+    ):
         epoch_loss = 0
         indices = jnp.arange(x.shape[0])
         rng_key, subkey = jax.random.split(rng_key)
         indices = jax.random.permutation(subkey, indices)
         for batch_start in trange(
-            0, x.shape[0], batch_size, leave=False, desc="Going through all batches"
+            0,
+            x.shape[0],
+            batch_size,
+            leave=False,
+            desc="Going through all batches",
+            disable=not show_progress_bar,
         ):
             batch_end = batch_start + batch_size
             batch_idx = indices[batch_start:batch_end]
@@ -104,6 +112,7 @@ class TopKAutoEncoder(BaseEstimator, TransformerMixin):
         batch_size: int = 4096,
         n_epochs: int = 10,
         alpha: float = 0.03,
+        show_progress_bar: bool = True,
         random_state: Optional[int] = None,
     ):
         self.random_state = random_state
@@ -117,6 +126,7 @@ class TopKAutoEncoder(BaseEstimator, TransformerMixin):
         self.top_k = top_k
         self.batch_size = batch_size
         self.n_epochs = n_epochs
+        self.show_progress_bar = show_progress_bar
 
     def partial_fit(self, X, y=None, n_epochs: Optional[int] = 1):
         optimizer = optax.adamw(self.lr)
@@ -144,6 +154,7 @@ class TopKAutoEncoder(BaseEstimator, TransformerMixin):
             sparsity_weight=self.alpha,
             batch_size=self.batch_size,
             n_epochs=self.n_epochs,
+            show_progress_bar=self.show_progress_bar,
         )
         self.loss_curve_.extend(loss_curve)
         self.coef_ = np.array(params["W_e"])
@@ -175,6 +186,7 @@ class TopKAutoEncoder(BaseEstimator, TransformerMixin):
             self.batch_size,
             leave=False,
             desc="Going through all batches",
+            disable=not self.show_progress_bar,
         ):
             batch_end = batch_start + self.batch_size
             batch_x = X[batch_start:batch_end]

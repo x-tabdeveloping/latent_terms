@@ -32,6 +32,7 @@ def main(encoder_name: str):
         batch_size=4096,
         n_epochs=1,
         random_state=42,
+        show_progress_bar=False,
     )
     for i_epoch in range(3):
         batches = load_dataset(
@@ -42,13 +43,17 @@ def main(encoder_name: str):
         ).batch(batch_size=1000)
         batches = islice(batches, N_BATCHES)
         batches = tqdm(
-            batches, desc=f"Going through batches for epoch {i_epoch}", total=500
+            batches,
+            desc=f"Going through batches for epoch {i_epoch}",
+            total=N_BATCHES,
         )
         for i_batch, batch in enumerate(batches):
-            token_embeddings, offsets = encoder.encode_tokens(list(batch["text"]))
+            token_embeddings, offsets = encoder.encode_tokens(
+                list(batch["text"]), show_progress_bar=False
+            )
             flat_token_embeddings, lengths = flatten_repr(token_embeddings)
             autoencoder.partial_fit(flat_token_embeddings, n_epochs=1)
-            if i_batch % 50000:
+            if i_batch % (N_BATCHES // 10):
                 print("Saving checkpoint...")
                 joblib.dump(
                     autoencoder,
