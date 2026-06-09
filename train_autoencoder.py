@@ -55,13 +55,11 @@ def main(encoder_name: str):
             autoencoder.partial_fit(flat_token_embeddings, n_epochs=1)
             if (i_batch % (N_BATCHES // 10)) == 0:
                 print("Saving checkpoint...")
-                joblib.dump(
-                    autoencoder,
-                    checkpoint_dir.joinpath(f"epoch_{i_epoch}-batch_{i_batch}.joblib"),
+                autoencoder.to_disk(
+                    checkpoint_dir.joinpath(f"epoch_{i_epoch}-batch_{i_batch}.joblib")
                 )
     print("Saving final autoencoder.")
-    joblib.dump(
-        autoencoder,
+    autoencoder.to_disk(
         checkpoint_dir.joinpath("final.joblib"),
     )
     print("DONE")
