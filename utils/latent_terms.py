@@ -24,6 +24,7 @@ class LatentTermsVectorizer(BaseEstimator, TransformerMixin):
         self,
         encoder: str | LateSentenceTransformer,
         autoencoder: TopKAutoEncoder,
+        vocabulary: dict[str, int],
         show_progress_bar: bool = True,
     ):
         self.encoder = encoder
@@ -31,6 +32,8 @@ class LatentTermsVectorizer(BaseEstimator, TransformerMixin):
             self._encoder = LateSentenceTransformer(self.encoder)
         else:
             self._encoder = self.encoder
+        self.vocabulary = dict(vocabulary)
+        self.vocabulary_ = self.vocabulary
         self.autoencoder = autoencoder
         self.show_progress_bar = show_progress_bar
         self.autoencoder.show_progress_bar = show_progress_bar
@@ -57,7 +60,14 @@ class LatentTermsVectorizer(BaseEstimator, TransformerMixin):
             encoder=self.encoder,
             autoencoder=self.autoencoder.to_dict(),
             show_progress_bar=self.show_progress_bar,
+            vocabulary=self.vocabulary,
         )
+
+    def get_feature_names_out(self):
+        vocab = [""] * len(self.vocabulary_)
+        for term, index in self.vocabulary_.items():
+            vocab[index] = term
+        return np.array(vocab)
 
     @classmethod
     def from_dict(cls, data):
@@ -66,6 +76,7 @@ class LatentTermsVectorizer(BaseEstimator, TransformerMixin):
             encoder=data["encoder"],
             autoencoder=autoencoder,
             show_progress_bar=data["show_progress_bar"],
+            vocabulary=data["vocabulary"],
         )
 
     def to_disk(
